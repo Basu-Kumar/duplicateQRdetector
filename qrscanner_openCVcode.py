@@ -3,6 +3,7 @@ from pyzbar.pyzbar import decode
 import pandas as pd
 from datetime import datetime
 import numpy as np
+import time
 
 class MultiQRCodeScanner:
     def __init__(self, camera_index=0, excel_path="multi_qr_codes.xlsx"):
@@ -16,14 +17,24 @@ class MultiQRCodeScanner:
         
     def initialize_camera(self):
         """Initialize the camera capture"""
-        self.cap = cv2.VideoCapture(self.camera_index)
-        if not self.cap.isOpened():
-            raise Exception("Could not open camera")
-            
-        # Set camera resolution for 720p
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        # Use GSTREAMER pipeline for Pi camera
+        gstreamer_pipeline = (
+            "libcamerasrc ! "
+            "video/x-raw, width=1280, height=720, framerate=30/1 ! "
+            "videoconvert ! "
+            "appsink"
+        )
+        self.cap = cv2.VideoCapture(gstreamer_pipeline, cv2.CAP_GSTREAMER)
         
+        if not self.cap.isOpened():
+            # Fallback to legacy Pi camera interface if GSTREAMER fails
+            self.cap = cv2.VideoCapture(0)
+            if not self.cap.isOpened():
+                raise Exception("Could not open Pi camera. Please check if camera is properly connected and enabled.")
+        
+        # Give camera sensor some time to warm up
+        time.sleep(2)
+            
     def draw_qr_info(self, frame, decoded_objects):
         """Draw QR code information on frame"""
         for idx, obj in enumerate(decoded_objects):
