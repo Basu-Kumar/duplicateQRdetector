@@ -20,9 +20,9 @@ class MultiQRCodeScanner:
         if not self.cap.isOpened():
             raise Exception("Could not open camera")
             
-        # Set camera resolution if needed
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        # Set camera resolution for 720p
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         
     def draw_qr_info(self, frame, decoded_objects):
         """Draw QR code information on frame"""
